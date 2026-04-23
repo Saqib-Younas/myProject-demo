@@ -1,206 +1,359 @@
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:e_commerce_flutter/core/extensions.dart';
+import 'package:get/get.dart';
 import 'package:e_commerce_flutter/src/model/product.dart';
-import 'package:e_commerce_flutter/src/view/widget/empty_cart.dart';
 import 'package:e_commerce_flutter/src/controller/product_controller.dart';
-import 'package:e_commerce_flutter/src/view/animation/animated_switcher_wrapper.dart';
+import 'package:e_commerce_flutter/src/view/widget/empty_cart.dart';
 
 final ProductController controller = Get.put(ProductController());
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  PreferredSizeWidget _appBar(BuildContext context) {
-    return AppBar(
-      title: Text(
-        "My cart",
-        style: Theme.of(context).textTheme.displayLarge,
-      ),
-    );
-  }
+  @override
+  Widget build(BuildContext context) {
+    controller.getCartItems();
 
-  Widget cartList() {
-    return SingleChildScrollView(
-      child: Column(
-        children: controller.cartProducts.mapWithIndex((index, _) {
-          Product product = controller.cartProducts[index];
-          return Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(15),
-            padding: const EdgeInsets.symmetric(
-              vertical: 15,
-              horizontal: 5,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.grey[200]?.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              spacing: 5,
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: ColorExtension.randomColor,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Padding(
-                          padding: const EdgeInsets.all(5),
-                          child: Image.asset(
-                            product.images[0],
-                            width: 100,
-                            height: 90,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name.nextLine,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        controller.getCurrentSize(product),
-                        style: TextStyle(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        controller.isPriceOff(product) ? "\$${product.off}" : "\$${product.price}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 23,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        splashRadius: 10.0,
-                        onPressed: () => controller.decreaseItemQuantity(product),
-                        icon: const Icon(
-                          Icons.remove,
-                          color: Color(0xFFEC6813),
-                        ),
-                      ),
-                      GetBuilder<ProductController>(
-                        builder: (ProductController controller) {
-                          return AnimatedSwitcherWrapper(
-                            child: Text(
-                              '${controller.cartProducts[index].quantity}',
-                              key: ValueKey<int>(
-                                controller.cartProducts[index].quantity,
-                              ),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        splashRadius: 10.0,
-                        onPressed: () => controller.increaseItemQuantity(product),
-                        icon: const Icon(Icons.add, color: Color(0xFFEC6813)),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
 
-  Widget bottomBarTitle() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.symmetric(horizontal: 30),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Total",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "My Cart",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
           ),
-          Obx(
-            () {
-              return AnimatedSwitcherWrapper(
-                child: Text(
-                  "\$${controller.totalPrice.value}",
-                  key: ValueKey<int>(controller.totalPrice.value),
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFFEC6813),
-                  ),
-                ),
-              );
-            },
-          )
+        ),
+        centerTitle: true,
+      ),
+
+      body: Column(
+        children: [
+          Expanded(
+            child: Obx(
+              () => controller.isEmptyCart
+                  ? const EmptyCart()
+                  : const CartGrid(),
+            ),
+          ),
+          const CartBottomSection(),
         ],
       ),
     );
   }
+}
 
-  Widget bottomBarButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 30, right: 30, bottom: 20),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(20)),
-          onPressed: controller.isEmptyCart ? null : () {},
-          child: const Text("Buy Now"),
+class CartGrid extends StatelessWidget {
+  const CartGrid({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: controller.cartProducts.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.70,
+          ),
+          itemBuilder: (context, index) {
+            return CartItemCard(
+              product: controller.cartProducts[index],
+              index: index,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class CartItemCard extends StatefulWidget {
+  final Product product;
+  final int index;
+
+  const CartItemCard({
+    super.key,
+    required this.product,
+    required this.index,
+  });
+
+  @override
+  State<CartItemCard> createState() => _CartItemCardState();
+}
+
+class _CartItemCardState extends State<CartItemCard> {
+  bool isHover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+    final hasDiscount = controller.isPriceOff(product);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHover = true),
+      onExit: (_) => setState(() => isHover = false),
+
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        transform: Matrix4.identity()..scale(isHover ? 1.03 : 1),
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isHover
+                ? const Color(0xFFEC6813)
+                : Colors.grey.shade200,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isHover
+                  ? const Color(0xFFEC6813).withOpacity(0.15)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: isHover ? 18 : 8,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              /// IMAGE
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      product.imageUrl ??
+                          'https://via.placeholder.com/150',
+                      height: 80,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+
+                  if (hasDiscount)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "-${_discountPercent(product)}%",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              /// NAME
+              Text(
+                product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              /// SIZE
+              Text(
+                controller.getCurrentSize(product),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              /// PRICE
+              Row(
+                children: [
+                  Text(
+                    "Rs.${hasDiscount ? product.discountPrice : product.price}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFEC6813),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (hasDiscount)
+                    Text(
+                      "Rs.${product.price}",
+                      style: const TextStyle(
+                        fontSize: 11,
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                      ),
+                    ),
+                ],
+              ),
+
+              const Spacer(),
+
+              /// QUANTITY
+              Container(
+                height: 34,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    _qtyButton(
+                      icon: Icons.remove,
+                      onTap: () =>
+                          controller.decreaseItemQuantity(product),
+                    ),
+
+                    Expanded(
+                      child: GetBuilder<ProductController>(
+                        builder: (_) => Text(
+                          '${controller.cartProducts[widget.index].quantity}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    _qtyButton(
+                      icon: Icons.add,
+                      onTap: () =>
+                          controller.increaseItemQuantity(product),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _qtyButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      hoverColor: const Color(0xFFEC6813).withOpacity(0.1),
+      child: SizedBox(
+        width: 34,
+        child: Icon(
+          icon,
+          size: 16,
+          color: const Color(0xFFEC6813),
+        ),
+      ),
+    );
+  }
+
+  int _discountPercent(Product p) {
+    if (p.discountPrice == null) return 0;
+    return (((p.price - p.discountPrice!) / p.price) * 100).round();
+  }
+}
+
+class CartBottomSection extends StatelessWidget {
+  const CartBottomSection({super.key});
+
   @override
   Widget build(BuildContext context) {
-    controller.getCartItems();
-    return Scaffold(
-      appBar: _appBar(context),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+          )
+        ],
+      ),
+
+      child: Column(
         children: [
-          Expanded(
-            child: !controller.isEmptyCart ? cartList() : const EmptyCart(),
+
+          /// TOTAL
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Total",
+                style: TextStyle(fontSize: 18),
+              ),
+              Obx(
+                () => Text(
+                  "Rs.${controller.totalPrice.value}",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFEC6813),
+                  ),
+                ),
+              ),
+            ],
           ),
-          bottomBarTitle(),
-          bottomBarButton()
+
+          const SizedBox(height: 12),
+
+          /// CHECKOUT BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: controller.isEmptyCart
+                  ? null
+                  : () => Navigator.pushNamed(context, '/payment'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEC6813),
+                padding: const EdgeInsets.all(14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                "Checkout",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
         ],
       ),
     );

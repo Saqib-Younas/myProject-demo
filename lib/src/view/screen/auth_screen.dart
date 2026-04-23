@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../core/theme.dart';
-import '../core/services/session_service.dart';
-import '../core/validators.dart';
+import 'package:e_commerce_flutter/src/core/theme.dart';
+import 'package:e_commerce_flutter/src/core/services/session_service.dart';
+import 'package:e_commerce_flutter/src/core/validators.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Note: Consolidating widgets here to fix the "No such file" import error
 // and resolve the undefined method issues.

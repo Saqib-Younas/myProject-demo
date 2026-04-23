@@ -1,15 +1,15 @@
-import 'package:e_commerce_flutter/core/app_color.dart';
-import 'package:flutter/material.dart' show Color, Colors;
+import 'package:flutter/material.dart';
+import 'package:e_commerce_flutter/src/core/app_color.dart';
 
 class RecommendedProduct {
-  Color? cardBackgroundColor;
-  Color? buttonTextColor;
-  Color? buttonBackgroundColor;
-  String imagePath;
+  final Color cardBackgroundColor;
+  final Color buttonTextColor;
+  final Color buttonBackgroundColor;
+  final String imagePath;
 
-  RecommendedProduct({
-    this.cardBackgroundColor,
-    this.buttonTextColor = AppColor.darkOrange,
+  const RecommendedProduct({
+    required this.cardBackgroundColor,
+    this.buttonTextColor = AppColor.primary,
     this.buttonBackgroundColor = Colors.white,
     this.imagePath = "assets/images/shopping.png",
   });

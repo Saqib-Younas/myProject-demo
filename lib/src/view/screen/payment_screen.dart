@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../core/services/session_service.dart';
+import 'package:e_commerce_flutter/src/core/services/session_service.dart';
 
 // --- Placeholder for your external validators ---
 // If you don't have this file, you can replace the validator: lines with null for now
-// import '../core/payment_validators.dart';
+// import 'package:e_commerce_flutter/src/core/payment_validators.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});

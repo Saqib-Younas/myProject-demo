@@ -35,10 +35,10 @@ class AuthController {
       if (res.user != null) {
         // save extra data in table
         await supabase.from('users').upsert({
-  'id': res.user!.id,
-  'name': _nameController.text.trim(),
-  'email': _emailController.text.trim(),
-});
+          'id': res.user!.id,
+          'name': name,
+          'email': email,
+        });
         return null; // success
       }
 

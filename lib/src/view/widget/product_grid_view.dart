@@ -57,7 +57,12 @@ class ProductGridView extends StatelessWidget {
         color: const Color(0xFFE5E6E8),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Image.asset(product.images[0], scale: 3),
+      child: Image.network(
+        product.imageUrl ?? 'https://via.placeholder.com/150',
+        scale: 3,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.image, size: 50),
+      ),
     );
   }
 
@@ -93,16 +98,16 @@ class ProductGridView extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  product.off != null
-                      ? "\$${product.off}"
-                      : "\$${product.price}",
+                  product.discountPrice != null
+                      ? "Rs.${product.discountPrice}"
+                      : "Rs.${product.price}",
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(width: 3),
                 Visibility(
-                  visible: product.off != null ? true : false,
+                  visible: product.discountPrice != null ? true : false,
                   child: Text(
-                    "\$${product.price}",
+                    "Rs.${product.price}",
                     style: const TextStyle(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey,
@@ -127,10 +132,10 @@ class ProductGridView extends StatelessWidget {
         shrinkWrap: true,
         physics: const ScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          childAspectRatio: 10 / 16,
+          childAspectRatio: 10 / 14,
           crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
         ),
         itemBuilder: (_, index) {
           Product product = items[index];
