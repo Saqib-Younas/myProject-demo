@@ -1,152 +1,168 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:e_commerce_flutter/core/app_color.dart';
 import 'package:e_commerce_flutter/src/controller/product_controller.dart';
 import 'package:e_commerce_flutter/src/view/widget/product_grid_view.dart';
 import 'package:e_commerce_flutter/src/model/product.dart';
-enum AppbarActionType { leading, trailing }
 
-class ProductListScreen extends StatelessWidget {
-  ProductListScreen({super.key});
+class ProductListScreen extends StatefulWidget {
+  const ProductListScreen({super.key});
 
-  final ProductController productController = Get.put(ProductController());
+  @override
+  State<ProductListScreen> createState() => _ProductListScreenState();
+}
 
-  /// 🔹 APP BAR BUTTON
-  Widget appBarActionButton(AppbarActionType type) {
-    IconData icon =
-        type == AppbarActionType.trailing ? Icons.search : Icons.menu;
+class _ProductListScreenState extends State<ProductListScreen> {
+  final ProductController controller = Get.put(ProductController());
+  bool isSearching = false;
+  final TextEditingController searchController = TextEditingController();
 
-    return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: AppColor.lightGrey,
-      ),
-      child: IconButton(
-        onPressed: () {},
-        icon: Icon(icon, color: Colors.black),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FD),
+      appBar: _buildAppBar(),
+      body: GetBuilder<ProductController>(
+        builder: (controller) {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+          }
+          return RefreshIndicator(
+            onRefresh: () => controller.fetchProducts(),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isSearching) ...[
+                    _buildHeader(context),
+                    const SizedBox(height: 20),
+                    _buildPromoCards(),
+                    const SizedBox(height: 25),
+                  ],
+                  
+                  _buildSectionHeader(context, isSearching ? "Search Results" : "New Arrivals"),
+                  const SizedBox(height: 10),
+                  
+                  // Product Grid
+                  controller.filteredProducts.isEmpty 
+                    ? const Center(child: Padding(
+                        padding: EdgeInsets.only(top: 50),
+                        child: Text("No products found", style: TextStyle(color: Colors.grey)),
+                      ))
+                    : ProductGridView(
+                        items: controller.filteredProducts,
+                        likeButtonPressed: (index) {
+                          final product = controller.filteredProducts[index];
+                          controller.toggleFavorite(product);
+                        },
+                        isPriceOff: (product) => controller.isPriceOff(product),
+                      ),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  PreferredSizeWidget get _appBar {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(100),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              appBarActionButton(AppbarActionType.leading),
-              appBarActionButton(AppbarActionType.trailing),
-            ],
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: const Color(0xFFF8F9FD),
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      title: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: TextField(
+          controller: searchController,
+          onChanged: (value) {
+            // Controller mein search logic trigger karein
+            controller.filterProductsByName(value); 
+            setState(() {
+              isSearching = value.isNotEmpty;
+            });
+          },
+          decoration: InputDecoration(
+            hintText: "Search luxury mobiles...",
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            border: InputBorder.none,
+            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1)),
+            suffixIcon: isSearching 
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                  onPressed: () {
+                    searchController.clear();
+                    controller.filterProductsByName("");
+                    setState(() => isSearching = false);
+                  },
+                )
+              : null,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
           ),
         ),
       ),
     );
   }
 
-  /// 🔥 PROMO CARDS - Using Active Mobile Products from Database
-  Widget _promoCards() {
+  Widget _buildPromoCards() {
     return GetBuilder<ProductController>(
       builder: (controller) {
-        // Get active mobile products
-        final List<Product> mobileProducts = controller.allProducts
-            .where((p) => 
-              p.category == "Apple" || 
-              p.category == "Samsung" || 
-              p.category == "Oppo" ||
-              p.category == "Infinix"
-            )
-            .take(4)
-            .toList();
-
-        if (mobileProducts.isEmpty) {
-          return const SizedBox(
-            height: 180,
-            child: Center(
-              child: Text("No sale products available"),
-            ),
-          );
-        }
+        final List<Product> promoProducts = controller.allProducts.take(3).toList();
+        if (promoProducts.isEmpty) return const SizedBox();
 
         return SizedBox(
-          height: 180,
+          height: 190,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: mobileProducts.length,
+            itemCount: promoProducts.length,
+            padding: const EdgeInsets.symmetric(vertical: 10),
             itemBuilder: (_, index) {
-              final product = mobileProducts[index];
-
+              final product = promoProducts[index];
               return Container(
-                width: 280,
-                margin: const EdgeInsets.only(right: 15),
+                width: 320,
+                margin: const EdgeInsets.only(right: 20),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(25),
                   gradient: const LinearGradient(
-                    colors: [Colors.orange, Colors.deepOrange],
+                    colors: [Color(0xFF6366F1), Color(0xFFA855F7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "🔥 Summer Sale",
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 16),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              product.category ?? "Mobile Deal",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                              ),
-                              child: const Text(
-                                "Shop Now",
-                                style: TextStyle(color: Colors.orange),
-                              ),
-                            )
+                            const Text("FLASH SALE", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text(product.name, maxLines: 2, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            Text("Rs.${product.price}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
                           ],
                         ),
                       ),
-                    ),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.network(
-                        product.imageUrl ?? 'https://via.placeholder.com/120',
-                        width: 120,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 120,
-                            height: 180,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported,
-                                color: Colors.grey),
-                          );
-                        },
-                      ),
-                    )
-                  ],
+                      Image.network(product.imageUrl ?? '', width: 100, fit: BoxFit.contain),
+                    ],
+                  ),
                 ),
               );
             },
@@ -156,79 +172,24 @@ class ProductListScreen extends StatelessWidget {
     );
   }
 
-  /// 🔹 STATIC HEADER
-  Widget _header(BuildContext context) {
+  Widget _buildHeader(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Welcome 👋",
-          style: Theme.of(context).textTheme.displayLarge,
-        ),
-        Text(
-          "Find your best deals 🔥",
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        const SizedBox(height: 10),
+        const Text("Hello, Shopper! 👋", style: TextStyle(fontSize: 16, color: Colors.grey)),
+        Text("Find Luxury Deals", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A))),
       ],
     );
   }
 
-  /// 🔹 CATEGORY HEADER
-  Widget _topCategoriesHeader(BuildContext context) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          "Top categories",
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        TextButton(
-          onPressed: () {},
-          child: const Text("SEE ALL"),
-        )
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        if (!isSearching) TextButton(onPressed: () {}, child: const Text("View All", style: TextStyle(color: Color(0xFF6366F1)))),
       ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _appBar,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _header(context),
-
-              const SizedBox(height: 15),
-
-              /// 🔥 PROMO CARDS
-              _promoCards(),
-
-              const SizedBox(height: 20),
-
-              _topCategoriesHeader(context),
-
-              const SizedBox(height: 10),
-
-              /// 🛍 PRODUCTS GRID
-              GetBuilder<ProductController>(
-                builder: (controller) {
-                  return ProductGridView(
-                    items: controller.filteredProducts,
-                    likeButtonPressed: (index) =>
-                        controller.toggleFavorite(index),
-                    isPriceOff: (product) =>
-                        controller.isPriceOff(product),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

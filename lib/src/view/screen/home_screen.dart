@@ -19,43 +19,89 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int newIndex = 0;
 
-static final List<Widget> screens = [
-  ProductListScreen(),
-  const FavoriteScreen(),
-  const CartScreen(),
-  const OrdersScreen(),
-  const ProfileScreen(),
-];
+  // Screens list
+  static final List<Widget> screens = [
+    ProductListScreen(),
+    const FavoriteScreen(),
+    const CartScreen(),
+    const OrdersScreen(),
+    const ProfileScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: StylishBottomBar(
-        currentIndex: newIndex,
-        onTap: (index) {
-          setState(() {
-            newIndex = index;
-          });
-        },
-        items: AppData.bottomNavBarItems
-            .map(
-              (item) => BottomBarItem(
-                backgroundColor: item.activeColor,
-                icon: item.icon,
+      // Background me halka sa gradient touch dene ke liye stack use kiya hai
+      extendBody: true, // Bottom bar ko transparent/floating look dene ke liye
+      body: Stack(
+        children: [
+          // Subtle background color
+          Container(color: const Color(0xFFF8F9FD)),
+          
+          // Page Content
+          PageTransitionSwitcherWrapper(
+            child: screens[newIndex],
+          ),
+        ],
+      ),
+
+      // --- Optimized Stylish Bottom Bar ---
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(15, 0, 15, 20), // Floating effect
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 25,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: StylishBottomBar(
+            currentIndex: newIndex,
+            onTap: (index) {
+              setState(() {
+                newIndex = index;
+              });
+            },
+            // Items optimized with premium gradients and active colors
+            items: AppData.bottomNavBarItems.map((item) {
+              return BottomBarItem(
+                icon: Icon(
+                  item.icon.icon, // Pehle wala icon
+                  size: 26,
+                ),
+                selectedIcon: Icon(
+                  item.icon.icon,
+                  size: 28,
+                  color: const Color(0xFF6366F1), // Modern Indigo
+                ),
+                backgroundColor: item.activeColor.withOpacity(0.1),
                 title: Text(
                   item.title,
-                  style: TextStyle(color: item.activeColor),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-            )
-            .toList(),
-        option: BubbleBarOptions(
-          opacity: 0.3,
-          unselectedIconColor: Colors.grey,
-          borderRadius: BorderRadius.circular(15),
+              );
+            }).toList(),
+
+            // Bubble options for a premium animated feel
+            option: BubbleBarOptions(
+              barStyle: BubbleBarStyle.horizontal, // Beautiful active state
+              bubbleFillStyle: BubbleFillStyle.fill,
+              opacity: 0.15,
+              unselectedIconColor: Colors.grey.shade400,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
         ),
-      ),
-      body: PageTransitionSwitcherWrapper(
-        child: screens[newIndex],
       ),
     );
   }

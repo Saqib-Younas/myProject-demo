@@ -3,73 +3,46 @@ import 'package:get/get.dart';
 import 'package:e_commerce_flutter/src/controller/product_controller.dart';
 import 'package:e_commerce_flutter/src/view/widget/product_grid_view.dart';
 
-class FavoriteScreen extends StatefulWidget {
+class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
 
   @override
-  State<FavoriteScreen> createState() => _FavoriteScreenState();
-}
-
-class _FavoriteScreenState extends State<FavoriteScreen> {
-  late final ProductController controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize controller once
-    controller = Get.put(ProductController());
-
-    // ✅ Call outside build
-    controller.getFavoriteItems();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
+    final ProductController controller = Get.find<ProductController>();
+    
+    // Sirf favorites dikhane ke liye fetch karein
+    controller.getFavoriteItems();
 
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          "Favorites",
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
+        title: const Text("My Wishlist", 
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
+      body: GetBuilder<ProductController>(
+        builder: (controller) {
+          if (controller.filteredProducts.isEmpty) {
+            return _emptyState();
+          }
 
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-
-        child: GetBuilder<ProductController>(
-          builder: (controller) {
-            // Reload favorite items to ensure list is up to date
-            if (controller.filteredProducts.isEmpty) {
-              return _emptyState();
-            }
-
-            return ProductGridView(
+          return Padding(
+            padding: const EdgeInsets.all(12),
+            child: ProductGridView(
               items: controller.filteredProducts,
-
               likeButtonPressed: (index) {
-                // Toggle favorite on the actual allProducts list
-                final favoriteProduct = controller.filteredProducts[index];
-                final indexInAll = controller.allProducts.indexOf(favoriteProduct);
-                if (indexInAll != -1) {
-                  controller.toggleFavorite(indexInAll);
-                  // Refresh the favorite items list
-                  controller.getFavoriteItems();
-                }
+                // FIXED: Get the product first
+                final product = controller.filteredProducts[index];
+                
+                // FIXED: Pass the product object to controller
+                controller.toggleFavorite(product);
               },
-
-              isPriceOff: (product) =>
-                  controller.isPriceOff(product),
-            );
-          },
-        ),
+              isPriceOff: (product) => controller.isPriceOff(product),
+            ),
+          );
+        },
       ),
     );
   }
@@ -79,24 +52,10 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(
-            Icons.favorite_border,
-            size: 80,
-            color: Colors.grey,
-          ),
-          SizedBox(height: 10),
-          Text(
-            "No Favorites Yet",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 5),
-          Text(
-            "Tap heart icon to add products",
-            style: TextStyle(color: Colors.grey),
-          ),
+          Icon(Icons.favorite_border_rounded, size: 80, color: Colors.grey),
+          SizedBox(height: 15),
+          Text("No Favorites Yet", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text("Items you heart will appear here.", style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
