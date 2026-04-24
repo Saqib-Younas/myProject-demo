@@ -68,6 +68,10 @@ class AppData {
       Icon(Icons.shopping_cart),
     ),
     const BottomNavBarItem(
+      "Orders",
+      Icon(Icons.shopping_bag),
+    ),
+    const BottomNavBarItem(
       "Profile",
       Icon(Icons.person),
     ),
