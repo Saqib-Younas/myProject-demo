@@ -46,6 +46,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
         child: GetBuilder<ProductController>(
           builder: (controller) {
+            // Reload favorite items to ensure list is up to date
             if (controller.filteredProducts.isEmpty) {
               return _emptyState();
             }
@@ -54,7 +55,14 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
               items: controller.filteredProducts,
 
               likeButtonPressed: (index) {
-                controller.toggleFavorite(index); // assuming this exists
+                // Toggle favorite on the actual allProducts list
+                final favoriteProduct = controller.filteredProducts[index];
+                final indexInAll = controller.allProducts.indexOf(favoriteProduct);
+                if (indexInAll != -1) {
+                  controller.toggleFavorite(indexInAll);
+                  // Refresh the favorite items list
+                  controller.getFavoriteItems();
+                }
               },
 
               isPriceOff: (product) =>

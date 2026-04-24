@@ -36,8 +36,11 @@ class ProductDetailScreen extends StatelessWidget {
       child: Image.network(
         product.imageUrl ?? 'https://via.placeholder.com/300',
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.image, size: 100, color: AppColor.textGrey),
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: AppColor.grey100,
+          child: const Icon(Icons.image_not_supported,
+              size: 100, color: AppColor.textGrey),
+        ),
       ),
     );
   }

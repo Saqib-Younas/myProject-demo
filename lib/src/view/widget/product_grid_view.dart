@@ -60,8 +60,20 @@ class ProductGridView extends StatelessWidget {
       child: Image.network(
         product.imageUrl ?? 'https://via.placeholder.com/150',
         scale: 3,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.image, size: 50),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.image_not_supported,
+              size: 50,
+              color: Colors.grey,
+            ),
+          );
+        },
       ),
     );
   }

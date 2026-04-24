@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:e_commerce_flutter/core/app_color.dart';
 import 'package:e_commerce_flutter/src/controller/product_controller.dart';
 import 'package:e_commerce_flutter/src/view/widget/product_grid_view.dart';
-
+import 'package:e_commerce_flutter/src/model/product.dart';
 enum AppbarActionType { leading, trailing }
 
 class ProductListScreen extends StatelessWidget {
@@ -47,99 +47,112 @@ class ProductListScreen extends StatelessWidget {
     );
   }
 
-  /// 🔥 PROMO CARDS
+  /// 🔥 PROMO CARDS - Using Active Mobile Products from Database
   Widget _promoCards() {
-    final List<Map<String, String>> cards = [
-      {
-        "title": "Oppo Deals",
-        "image":
-            "https://fdn2.gsmarena.com/vv/bigpic/oppo-reno10.jpg",
-      },
-      {
-        "title": "iPhone Sale",
-        "image":
-            "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro-max.jpg",
-      },
-      {
-        "title": "Samsung Offer",
-        "image":
-            "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s23.jpg",
-      },
-      {
-        "title": "Xiaomi Discount",
-        "image":
-            "https://fdn2.gsmarena.com/vv/bigpic/xiaomi-13.jpg",
-      },
-    ];
+    return GetBuilder<ProductController>(
+      builder: (controller) {
+        // Get active mobile products
+        final List<Product> mobileProducts = controller.allProducts
+            .where((p) => 
+              p.category == "Apple" || 
+              p.category == "Samsung" || 
+              p.category == "Oppo" ||
+              p.category == "Infinix"
+            )
+            .take(4)
+            .toList();
 
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: cards.length,
-        itemBuilder: (_, index) {
-          final item = cards[index];
-
-          return Container(
-            width: 280,
-            margin: const EdgeInsets.only(right: 15),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              gradient: const LinearGradient(
-                colors: [Colors.orange, Colors.deepOrange],
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "🔥 Summer Sale",
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 16),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          item["title"]!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                          ),
-                          child: const Text(
-                            "Shop Now",
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Image.network(
-                    item["image"]!,
-                    width: 120,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              ],
+        if (mobileProducts.isEmpty) {
+          return const SizedBox(
+            height: 180,
+            child: Center(
+              child: Text("No sale products available"),
             ),
           );
-        },
-      ),
+        }
+
+        return SizedBox(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: mobileProducts.length,
+            itemBuilder: (_, index) {
+              final product = mobileProducts[index];
+
+              return Container(
+                width: 280,
+                margin: const EdgeInsets.only(right: 15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  gradient: const LinearGradient(
+                    colors: [Colors.orange, Colors.deepOrange],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "🔥 Summer Sale",
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 16),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              product.category ?? "Mobile Deal",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                              ),
+                              child: const Text(
+                                "Shop Now",
+                                style: TextStyle(color: Colors.orange),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.network(
+                        product.imageUrl ?? 'https://via.placeholder.com/120',
+                        width: 120,
+                        height: 180,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 120,
+                            height: 180,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.image_not_supported,
+                                color: Colors.grey),
+                          );
+                        },
+                      ),
+                    )
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

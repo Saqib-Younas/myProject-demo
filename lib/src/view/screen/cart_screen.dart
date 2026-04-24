@@ -143,6 +143,14 @@ class _CartItemCardState extends State<CartItemCard> {
                       height: 80,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 80,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
                     ),
                   ),
 
